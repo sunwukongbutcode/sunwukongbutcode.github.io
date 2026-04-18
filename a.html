@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Successful</title>
+    <title></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -13,60 +13,101 @@
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', system-ui;
-            color: #eef4ff;
+            padding: 1rem;
         }
-        .protected-card {
+        .debug-card {
+            background: rgba(0,0,0,0.7);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            color: #ffecb3;
+            border-left: 5px solid #ffaa33;
+        }
+        .success-card {
             background: rgba(20, 30, 45, 0.9);
             backdrop-filter: blur(12px);
             border-radius: 2rem;
             padding: 2.5rem;
             text-align: center;
             box-shadow: 0 20px 35px rgba(0,0,0,0.4);
-            border: 1px solid rgba(100, 180, 250, 0.3);
-            max-width: 500px;
-            width: 90%;
+            border: 1px solid rgba(100,180,250,0.3);
+            color: #eef4ff;
         }
-        h1 { font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(135deg, #ffd966, #ffb347); background-clip: text; -webkit-background-clip: text; color: transparent; }
-        p { margin: 1rem 0; line-height: 1.5; }
-        .success-icon { font-size: 4rem; margin-bottom: 1rem; }
-        .note { font-size: 0.8rem; color: #9bb7d0; margin-top: 1.5rem; border-top: 1px solid #2f4b68; padding-top: 1rem; }
+        h1 { font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(135deg, #ffd966, #ffb347); background-clip: text; color: transparent; }
+        .error-detail { font-family: monospace; background: #2a1e1e; padding: 1rem; border-radius: 1rem; margin-top: 1rem; white-space: pre-wrap; word-break: break-all; }
+        button { margin-top: 1rem; background: #3a6ea5; border: none; padding: 0.5rem 1.2rem; border-radius: 2rem; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
-<div class="protected-card" id="content">
-    <div class="success-icon"></div>
-    <h1>授权访问成功</h1>
-    <p>您已通过安全验证</p>
-    <a href="mainpage28472.html">点击此处</a> 跳转网站</p>
-    <div class="note">会话令牌有效期内可正常访问 · 关闭标签页后需重新登录</div>
-</div>
+<div id="mainContainer"></div>
 
 <script>
     (function() {
-        const token = sessionStorage.getItem('secure_token');
-        const expire = sessionStorage.getItem('token_expire');
-
-        function redirectToLogin() {
-            sessionStorage.removeItem('secure_token');
-            sessionStorage.removeItem('token_expire');
-            window.location.href = "index.html";
+        
+        let token = localStorage.getItem('secure_token');
+        let expire = localStorage.getItem('token_expire');
+        let source = 'localStorage';
+        if (!token || !expire) {
+            token = sessionStorage.getItem('secure_token');
+            expire = sessionStorage.getItem('token_expire');
+            source = 'sessionStorage';
         }
 
+        const container = document.getElementById('mainContainer');
+        const now = Date.now();
+
+        function showError(reason) {
+            container.innerHTML = `
+                <div class="debug-card">
+                    <h2 style="color:#ffaa66;">访问被拒绝</h2>
+                    <p>原因：${reason}</p>
+                    <div class="error-detail">
+                        <strong>信息：</strong><br>
+                        令牌来源: ${source}<br>
+                        令牌值: ${token || '(无)'}<br>
+                        有效期: ${expire ? new Date(parseInt(expire)).toLocaleString() : '(无)'}<br>
+                        当前时间: ${new Date(now).toLocaleString()}<br>
+                        是否过期: ${expire ? (now > parseInt(expire) ? '是' : '否') : '无法判断'}
+                    </div>
+                    <button onclick="window.location.href='index.html'">返回登录页</button>
+                </div>
+            `;
+            console.error("[a.html] 验证失败:", reason, "token:", token, "expire:", expire);
+        }
+
+        function showSuccess() {
+            container.innerHTML = `
+                <div class="success-card">
+                    <div style="font-size:4rem;"></div>
+                    <h1>授权访问成功</h1>
+                    <p>您已通过安全验证，这是受保护的内容页面。</p>
+                    <a href="mainpage28472.html">点击此处</a> 跳转网站</p>
+                    <div class="note" style="margin-top:1.5rem; font-size:0.8rem; color:#9bb7d0;">会话令牌有效期内可正常访问 · 关闭标签页后需重新登录</div>
+                    <button onclick="window.location.href='index.html'" style="margin-top:1.5rem;">注销并返回</button>
+                </div>
+            `;
+        }
+
+        
         if (!token || !expire) {
-            redirectToLogin();
+            showError("未找到有效的会话令牌（localStorage 和 sessionStorage 均为空）");
             return;
         }
-        const now = Date.now();
         if (now > parseInt(expire, 10)) {
-            redirectToLogin();
+            showError("令牌已过期，请重新登录");
+            localStorage.removeItem('secure_token');
+            localStorage.removeItem('token_expire');
+            sessionStorage.removeItem('secure_token');
+            sessionStorage.removeItem('token_expire');
             return;
         }
         if (token.length < 20) {
-            redirectToLogin();
+            showError("令牌格式无效（长度不足20）");
             return;
         }
         
-        console.log("会话有效，展示保护内容");
+        showSuccess();
     })();
 </script>
 </body>
