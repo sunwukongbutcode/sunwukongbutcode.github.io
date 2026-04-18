@@ -2,124 +2,578 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>环境信息</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>个人博客</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            background: #f5f7fb;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            padding: 2rem 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: url('https://images.pexels.com/photos/7130555/pexels-photo-7130555.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&dpr=2') no-repeat center center fixed;
+            background-size: cover;
+            color: #1e1e2f;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            position: relative;
         }
-        .card {
-            max-width: 500px;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-            padding: 2rem;
+            height: 100%;
+            background: rgba(245, 245, 250, 0.75);
+            z-index: -1;
+            pointer-events: none;
         }
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 0.2rem;
-            color: #1e293b;
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
-        .sub {
-            color: #5b6e8c;
-            margin-bottom: 1.8rem;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 0.75rem;
+        .header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
         }
-        .info-row {
-            background: #f8fafc;
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-            margin-bottom: 0.8rem;
+
+        .nav-bar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
             flex-wrap: wrap;
-            font-size: 0.9rem;
+            gap: 16px;
         }
-        .label {
+
+        .logo a {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2c3e8f, #5f4b9e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
             font-weight: 500;
-            color: #334155;
+            color: #2d3a5e;
+            transition: 0.2s;
         }
-        .value {
-            font-family: monospace;
-            color: #0f172a;
-            word-break: break-all;
-            text-align: right;
+
+        .nav-links a:hover {
+            color: #4f46e5;
         }
-        footer {
+
+        
+        .blog-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 48px;
+            margin: 48px 0 64px;
+        }
+
+        .articles-section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 28px;
+            letter-spacing: -0.3px;
+            border-left: 5px solid #5f4b9e;
+            padding-left: 18px;
+            color: #1f1a3c;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        }
+
+        .article-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 28px;
+            margin-bottom: 32px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.97);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.2);
+            border-color: #ffffff;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #4a4e6b;
+            margin-bottom: 12px;
+        }
+
+        .article-meta .date i, .article-meta .category i {
+            margin-right: 4px;
+        }
+
+        .article-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            line-height: 1.3;
+        }
+
+        .article-title a {
+            text-decoration: none;
+            color: #1a1a2c;
+            transition: color 0.2s;
+        }
+
+        .article-title a:hover {
+            color: #4f46e5;
+        }
+
+        .article-excerpt {
+            color: #2d2f42;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .read-more-btn {
+            background: none;
+            border: none;
+            color: #5f4b9e;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.95rem;
+            transition: gap 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .read-more-btn i {
+            font-size: 0.85rem;
+            transition: transform 0.2s;
+        }
+
+        .read-more-btn:hover {
+            gap: 10px;
+            color: #2c3e8f;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            align-self: start;
+        }
+
+        .sidebar-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: 0.2s;
+        }
+
+        .author-info {
             text-align: center;
-            margin-top: 1.8rem;
-            font-size: 0.7rem;
-            color: #94a3b8;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 16px;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .author-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1f1a3c;
+        }
+
+        .author-bio {
+            color: #3b3d5e;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 12px;
+        }
+
+        .social-links a {
+            color: #5a5e7a;
+            font-size: 1.3rem;
+            transition: 0.2s;
+        }
+
+        .social-links a:hover {
+            color: #4f46e5;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            border-left: 3px solid #5f4b9e;
+            padding-left: 12px;
+            color: #1f1a3c;
+        }
+
+        .featured-detail {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(6px);
+            border-radius: 32px;
+            margin-bottom: 48px;
+            padding: 32px;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12);
+        }
+
+        .detail-header {
+            margin-bottom: 24px;
+        }
+
+        .detail-category {
+            display: inline-block;
+            background: #eef2ffcc;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #4f46e5;
+            margin-bottom: 16px;
+            backdrop-filter: blur(2px);
+        }
+
+        .detail-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            line-height: 1.25;
+            color: #0f0e1a;
+        }
+
+        .detail-meta {
+            color: #4a4e6b;
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        .detail-content {
+            color: #1f2330;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .detail-content p {
+            margin-bottom: 1.2rem;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        
+        .footer {
+            background: url('https://images.pexels.com/photos/2049422/pexels-photo-2049422.jpeg?auto=compress&cs=tinysrgb&w=1600') no-repeat center center/cover;
+            position: relative;
+            border-top: none;
+            padding: 48px 0 32px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            margin-top: 20px;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+        .footer .container {
+            position: relative;
+            z-index: 2;
+        }
+        .footer p {
+            color: #f5f5f7;
+        }
+        .footer a {
+            color: #ffd966;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        
+        @media (max-width: 900px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .sidebar {
+                position: static;
+            }
+            .detail-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav-bar {
+                flex-direction: column;
+                text-align: center;
+            }
+            .article-title {
+                font-size: 1.4rem;
+            }
+            .featured-detail {
+                padding: 20px;
+            }
+            .article-card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>测试</h1>
-    <div class="sub">环境信息</div>
 
-    <div class="info-row">
-        <span class="label">浏览器</span>
-        <span class="value" id="browser">—</span>
+<header class="header">
+    <div class="container">
+        <div class="nav-bar">
+            <div class="logo">
+                <a href="#">悟空<span style="color:#5f4b9e;">·</span></a>
+            </div>
+            <div class="nav-links">
+                <a href="#">首页</a>
+                <a href="artical.html">文章</a>
+                <a href="about.html">关于</a>
+                <a href="https://www.gushiwenku.cn/shiwen/2f8e6fe/">友链</a>
+            </div>
+        </div>
     </div>
-    <div class="info-row">
-        <span class="label">操作系统</span>
-        <span class="value" id="os">—</span>
-    </div>
-    <div class="info-row">
-        <span class="label">视口尺寸</span>
-        <span class="value" id="viewport">—</span>
+</header>
+
+<main class="container">
+    
+    <div class="featured-detail" id="detailContainer">
+        <div class="detail-header">
+            
+            <h1 class="detail-title" id="detailTitle">重要通知</h1>
+            <div class="detail-meta">
+                
+                
+                <span><i class="far fa-user"></i>管理员</span>
+            </div>
+        </div>
+        <div class="detail-content" id="detailContent">
+            <p>目前网站处于测试阶段，可能出现崩溃卡死，请勿频繁操作。如果你对本站有任何建设性建议，欢迎提出。</p>
+            
+        </div>
     </div>
 
-    <footer></footer>
-</div>
+    
+    <div class="blog-grid">
+        
+        <div class="articles-section">
+            <h2><i class="fas fa-feather-alt"></i> 最新消息</h2>
+            <div id="articlesList"></div>
+        </div>
+
+        
+        <aside class="sidebar">
+            <div class="sidebar-card author-info">
+                <img class="avatar" src="head.webp" alt="作者头像">
+                <div class="author-name">悟空</div>
+                <div class="author-bio">网站作者<br>不知道写什么</div>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="mailto:weriehsxy@outlook.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <div class="sidebar-title">关于本站</div>
+                <p style="font-size:0.9rem; color:#3b3d5e;">这是一个个人网站，目前还没想好放什么。</p>
+            </div>
+        </aside>
+    </div>
+</main>
+
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 悟空 </p>
+        <p style="font-size:0.8rem; margin-top:8px;">背景图来自光影灵感 · 沉淀思考的温度</p>
+    </div>
+</footer>
 
 <script>
-    // 获取浏览器和操作系统信息
-    function getBasicInfo() {
-        const ua = navigator.userAgent;
-        let browser = 'Unknown';
-        if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
-        else if (ua.includes('Firefox')) browser = 'Firefox';
-        else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
-        else if (ua.includes('Edg')) browser = 'Edge';
-        let os = 'Unknown';
-        if (ua.includes('Windows')) os = 'Windows';
-        else if (ua.includes('Mac OS')) os = 'macOS';
-        else if (ua.includes('Linux')) os = 'Linux';
-        else if (ua.includes('Android')) os = 'Android';
-        else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
-        return { browser, os };
+    
+    const articlesData = [
+        {
+            id: 1,
+            title: "对“阿房宫赋”读音的探讨",
+            excerpt: "【ē páng gōng fù】，多用于传统 / 教学；【ā fáng gōng fù】陕西方言（“阿” 意为 “那个”）#信息参考：百度百科	",
+            date: "2026-04-16",
+            category: "学术探讨",
+            readTime: 9.1
+        },
+        {
+            id: 2,
+            title: "对“冰茶”的学术探讨",
+            excerpt: "牢彬系列的包装设计走的是简约而不失时尚的路线。每款冰茶的瓶身上都印有对应的水果或花卉图案，色彩搭配和谐，让人一眼就能感受清凉与活力。",
+            date: "2025-2026",
+            category: "学术探讨",
+            readTime: 7.8
+        },
+        {
+            id: 3,
+            title: "对“鸡翅尖”的学术探讨",
+            excerpt: "鸡翅尖是鸡翅膀的外端部位，属于家常菜类别，主要食材为鸡翅，常用辅料包括盐、麻油、辣椒油、卤水等。其肉质富含蛋白质、维生素A（含量超过青椒）及成胶原、弹性蛋白，对血管、皮肤发育有益。",
+            date: "2025-2026",
+            category: "学术探讨",
+            readTime: 7.8
+        },
+        {
+            id: 4,
+            title: "还能写什么",
+            excerpt: "算了，不写了",
+            date: "2026-04-17",
+            category: "放弃",
+            readTime: 1.3
+        },
+        
+    ];
+
+    
+    let currentArticleId = 1;
+
+    
+    function renderArticles(filterCategory = null) {
+        let filtered = [...articlesData];
+        if (filterCategory && filterCategory !== '全部') {
+            filtered = filtered.filter(article => article.category === filterCategory);
+        }
+        const articlesListDiv = document.getElementById('articlesList');
+        if (!articlesListDiv) return;
+        articlesListDiv.innerHTML = '';
+        filtered.forEach(article => {
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            card.setAttribute('data-id', article.id);
+            card.innerHTML = `
+                <div class="article-meta">
+                    <span class="date"><i class="far fa-calendar-alt"></i> ${article.date}</span>
+                    <span class="category"><i class="far fa-folder"></i> ${article.category}</span>
+                    <span><i class="far fa-clock"></i> 约${article.readTime}分钟</span>
+                </div>
+                <h3 class="article-title"><a href="javascript:void(0)" class="article-link" data-id="${article.id}">${article.title}</a></h3>
+                <div class="article-excerpt">${article.excerpt}</div>
+                <button class="read-more-btn" data-id="${article.id}">阅读全文 <i class="fas fa-arrow-right"></i></button>
+            `;
+            articlesListDiv.appendChild(card);
+        });
+
+        
+        document.querySelectorAll('.read-more-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.getAttribute('data-id'));
+                if (id) loadArticleDetail(id);
+            });
+        });
+        document.querySelectorAll('.article-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const id = parseInt(link.getAttribute('data-id'));
+                if (id) loadArticleDetail(id);
+            });
+        });
     }
 
-    function updateUI() {
-        const { browser, os } = getBasicInfo();
-        document.getElementById('browser').innerText = browser;
-        document.getElementById('os').innerText = os;
-        document.getElementById('viewport').innerText = `${window.innerWidth} x ${window.innerHeight}`;
+    
+    function loadArticleDetail(articleId) {
+        const article = articlesData.find(a => a.id === articleId);
+        if (!article) return;
+        currentArticleId = articleId;
+        document.getElementById('detailCategory').innerText = article.category;
+        document.getElementById('detailTitle').innerText = article.title;
+        document.getElementById('detailDate').innerText = article.date;
+        
+        const metaDiv = document.querySelector('.detail-meta');
+        if (metaDiv) {
+            metaDiv.innerHTML = `<span><i class="far fa-calendar-alt"></i> ${article.date}</span>
+                                 <span><i class="far fa-clock"></i> 阅读约${article.readTime}分钟</span>
+                                 <span><i class="far fa-user"></i> 远川</span>`;
+        }
+        document.getElementById('detailContent').innerHTML = article.content;
+        
+        document.getElementById('detailContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // 初始化
-    updateUI();
+    
+    function resetToAllArticles() {
+        renderArticles(null);
+        if (articlesData.length) loadArticleDetail(articlesData[0].id);
+    }
 
-    // 视口变化时自动更新尺寸
-    window.addEventListener('resize', () => {
-        document.getElementById('viewport').innerText = `${window.innerWidth} x ${window.innerHeight}`;
-    });
+    
+    function init() {
+        renderArticles(null);
+        
+        if (articlesData.length) loadArticleDetail(articlesData[0].id);
+
+        
+        const homeLinks = document.querySelectorAll('.nav-links a, .logo a');
+        homeLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetToAllArticles();
+            });
+        });
+    }
+
+    init();
 </script>
 </body>
 </html>
