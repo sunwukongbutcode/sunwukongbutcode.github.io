@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title></title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 30%, #0f1724, #0a0f17);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .glass-card {
+            background: rgba(20, 30, 45, 0.85);
+            backdrop-filter: blur(14px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(80, 140, 200, 0.2);
+            width: 100%;
+            max-width: 460px;
+            padding: 2rem 1.8rem;
+            transition: 0.2s;
+        }
+        .lock-icon { text-align: center; font-size: 3.5rem; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4)); }
+        h2 { font-size: 1.8rem; font-weight: 700; text-align: center; background: linear-gradient(135deg, #eef5ff, #9bc0e0); background-clip: text; -webkit-background-clip: text; color: transparent; margin: 0.3rem 0 0.2rem; }
+        .sub { text-align: center; color: #9bb5d0; font-size: 0.8rem; margin-bottom: 1.6rem; }
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; font-weight: 500; font-size: 0.85rem; color: #cce4ff; margin-bottom: 0.5rem; }
+        .password-wrapper { display: flex; align-items: center; background: #0f1822; border: 1.5px solid #2a3f55; border-radius: 2rem; padding: 0 0.2rem 0 1.2rem; }
+        .password-wrapper:focus-within { border-color: #3f9eff; box-shadow: 0 0 0 3px rgba(63, 158, 255, 0.2); }
+        .password-input { flex: 1; padding: 0.85rem 0.5rem; background: transparent; border: none; outline: none; color: #f0f6ff; font-size: 1rem; }
+        .toggle-eye { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 1rem; color: #8aadcc; }
+        button[type="submit"] { width: 100%; background: linear-gradient(95deg, #1e5380, #103a58); border: none; padding: 0.9rem; font-size: 1rem; font-weight: 600; color: white; border-radius: 2rem; cursor: pointer; transition: 0.2s; margin-top: 0.5rem; }
+        button[type="submit"]:hover:not(:disabled) { background: linear-gradient(95deg, #2f6a9e, #164b6e); transform: scale(0.98); }
+        .error-msg { background: rgba(200, 60, 50, 0.2); border-left: 3px solid #e74c3c; padding: 0.7rem; border-radius: 1rem; margin-top: 1rem; color: #ffc5c5; font-size: 0.8rem; text-align: center; }
+        .attempt-info { font-size: 0.7rem; text-align: center; margin-top: 1rem; color: #7e9ec0; }
+        .footer-note { margin-top: 1.5rem; font-size: 0.7rem; text-align: center; color: #6a8eb0; border-top: 1px solid #2f4560; padding-top: 1rem; }
+        .test-hint { margin-top: 0.8rem; font-size: 0.7rem; background: #1e2f3e; border-radius: 1.5rem; padding: 0.4rem; text-align: center; color: #bbd9ff; }
+    </style>
+</head>
+<body>
+<div class="glass-card">
+    <h2>验证</h2>
+    <div class="sub">请输入密钥后进入</div>
+
+    <form id="loginForm" action="javascript:void(0);">
+        <div class="input-group">
+            <label>访问密钥</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" class="password-input" placeholder="输入密码" autocomplete="off" autofocus>
+                <button type="button" class="toggle-eye" id="toggleEye">1</button>
+            </div>
+        </div>
+        <button type="submit" id="submitBtn">验证并进入</button>
+        <div id="messageArea" class="error-msg" style="display: none;"></div>
+        <div class="attempt-info" id="attemptCounter"></div>
+    </form>
+    <div class="test-hint">
+        
+    </div>
+    <div class="footer-note">
+        
+    </div>
+</div>
+
+<script>
+    (function() {
+        
+        const CORRECT_HASH = "b84340b0d4b536bdf4375506888365ae2d49a196fb54fbe75f3f8a39d4f1a04e";
+        
+        
+        let failedAttempts = 0;
+        const MAX_ATTEMPTS = 5;
+        let lockUntil = null;
+        let lockTimer = null;
+
+        const form = document.getElementById('loginForm');
+        const pwdInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submitBtn');
+        const msgDiv = document.getElementById('messageArea');
+        const attemptSpan = document.getElementById('attemptCounter');
+
+        function showMessage(msg, isError = true) {
+            msgDiv.textContent = msg;
+            msgDiv.style.display = 'block';
+            if (isError) {
+                msgDiv.style.background = "rgba(200,60,50,0.2)";
+                msgDiv.style.borderLeftColor = "#e74c3c";
+            } else {
+                msgDiv.style.background = "rgba(60,180,100,0.2)";
+                msgDiv.style.borderLeftColor = "#2ecc71";
+            }
+            setTimeout(() => {
+                if (msgDiv.textContent === msg) msgDiv.style.display = 'none';
+            }, 4000);
+        }
+
+        function updateAttemptUI() {
+            if (lockUntil && Date.now() < lockUntil) {
+                attemptSpan.innerHTML = "账户已临时锁定，请稍后重试";
+                return;
+            }
+            const left = MAX_ATTEMPTS - failedAttempts;
+            if (left <= 0) {
+                attemptSpan.innerHTML = "已达最大失败次数，系统已锁定";
+            } else {
+                attemptSpan.innerHTML = `剩余尝试次数: ${left} / ${MAX_ATTEMPTS}`;
+            }
+        }
+
+        function startLock(seconds = 300) {
+            const until = Date.now() + seconds * 1000;
+            lockUntil = until;
+            if (lockTimer) clearInterval(lockTimer);
+            const updateLock = () => {
+                const now = Date.now();
+                if (now >= until) {
+                    clearInterval(lockTimer);
+                    lockUntil = null;
+                    failedAttempts = 0;
+                    updateAttemptUI();
+                    submitBtn.disabled = false;
+                    pwdInput.disabled = false;
+                    showMessage("锁定已解除，请重新尝试", false);
+                    if (lockTimer) clearInterval(lockTimer);
+                    return;
+                }
+                const remain = Math.ceil((until - now) / 1000);
+                attemptSpan.innerHTML = `账户锁定中，剩余 ${remain} 秒后解锁`;
+                submitBtn.disabled = true;
+                pwdInput.disabled = true;
+            };
+            updateLock();
+            lockTimer = setInterval(updateLock, 1000);
+        }
+
+        
+        function generateToken() {
+            return CryptoJS.lib.WordArray.random(16).toString();
+        }
+
+        function onSuccess() {
+            const token = generateToken();
+            sessionStorage.setItem('secure_token', token);
+            sessionStorage.setItem('token_expire', Date.now() + 30 * 60 * 1000); // 30分钟
+            showMessage("验证通过，正在跳转至安全区域...", false);
+            submitBtn.disabled = true;
+            submitBtn.textContent = "跳转中...";
+            setTimeout(() => {
+                window.location.href = "a.html";
+            }, 300);
+        }
+
+        function verifyPassword() {
+            if (lockUntil && Date.now() < lockUntil) {
+                showMessage("账户已锁定，请稍后再试");
+                return false;
+            }
+            const rawPwd = pwdInput.value;
+            if (!rawPwd) {
+                showMessage("请输入访问密码");
+                pwdInput.focus();
+                return false;
+            }
+            const inputHash = CryptoJS.SHA256(rawPwd).toString();
+            if (inputHash === CORRECT_HASH) {
+                failedAttempts = 0;
+                updateAttemptUI();
+                onSuccess();
+                return true;
+            } else {
+                failedAttempts++;
+                updateAttemptUI();
+                if (failedAttempts >= MAX_ATTEMPTS) {
+                    startLock(300);
+                    showMessage("错误次数过多，账户已锁定 5 分钟！");
+                } else {
+                    showMessage(`密码错误，还剩 ${MAX_ATTEMPTS - failedAttempts} 次机会`);
+                    pwdInput.value = '';
+                    pwdInput.focus();
+                }
+                return false;
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (submitBtn.disabled) return;
+            verifyPassword();
+        });
+
+        
+        const toggleEye = document.getElementById('toggleEye');
+        let isVisible = false;
+        toggleEye.addEventListener('click', () => {
+            isVisible = !isVisible;
+            pwdInput.type = isVisible ? 'text' : 'password';
+            toggleEye.textContent = isVisible ? '1' : '0';
+        });
+
+        pwdInput.addEventListener('input', () => {
+            if (msgDiv.style.display === 'block' && msgDiv.textContent.includes("错误")) {
+                msgDiv.style.display = 'none';
+            }
+        });
+
+        updateAttemptUI();
+        pwdInput.focus();
+
+        
+        if (sessionStorage.getItem('secure_token')) {
+            sessionStorage.removeItem('secure_token');
+            sessionStorage.removeItem('token_expire');
+        }
+    })();
+</script>
+</body>
+</html>
