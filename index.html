@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境信息</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f5f7fb;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            color: #1e293b;
+        }
+        .sub {
+            color: #5b6e8c;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.75rem;
+        }
+        .info-row {
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+        .label {
+            font-weight: 500;
+            color: #334155;
+        }
+        .value {
+            font-family: monospace;
+            color: #0f172a;
+            word-break: break-all;
+            text-align: right;
+        }
+        footer {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>测试</h1>
+    <div class="sub">环境信息</div>
+
+    <div class="info-row">
+        <span class="label">浏览器</span>
+        <span class="value" id="browser">—</span>
+    </div>
+    <div class="info-row">
+        <span class="label">操作系统</span>
+        <span class="value" id="os">—</span>
+    </div>
+    <div class="info-row">
+        <span class="label">视口尺寸</span>
+        <span class="value" id="viewport">—</span>
+    </div>
+
+    <footer></footer>
+</div>
+
+<script>
+    // 获取浏览器和操作系统信息
+    function getBasicInfo() {
+        const ua = navigator.userAgent;
+        let browser = 'Unknown';
+        if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+        else if (ua.includes('Firefox')) browser = 'Firefox';
+        else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+        else if (ua.includes('Edg')) browser = 'Edge';
+        let os = 'Unknown';
+        if (ua.includes('Windows')) os = 'Windows';
+        else if (ua.includes('Mac OS')) os = 'macOS';
+        else if (ua.includes('Linux')) os = 'Linux';
+        else if (ua.includes('Android')) os = 'Android';
+        else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+        return { browser, os };
+    }
+
+    function updateUI() {
+        const { browser, os } = getBasicInfo();
+        document.getElementById('browser').innerText = browser;
+        document.getElementById('os').innerText = os;
+        document.getElementById('viewport').innerText = `${window.innerWidth} x ${window.innerHeight}`;
+    }
+
+    // 初始化
+    updateUI();
+
+    // 视口变化时自动更新尺寸
+    window.addEventListener('resize', () => {
+        document.getElementById('viewport').innerText = `${window.innerWidth} x ${window.innerHeight}`;
+    });
+</script>
+</body>
+</html>
