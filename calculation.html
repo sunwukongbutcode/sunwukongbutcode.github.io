@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>计算尺 | 模拟计算的传奇工具 - 原理与使用指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #e9e6df 0%, #dad6cd 100%);
+            font-family: 'Inter', 'Segoe UI', 'Roboto', system-ui, -apple-system, 'Noto Sans', sans-serif;
+            color: #2c241a;
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        /* 复古纸张基调 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(253, 250, 240, 0.95);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(0px);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* 装饰经典标尺纹 */
+        .hero {
+            background: #2e2b26;
+            background-image: repeating-linear-gradient(45deg, rgba(220, 190, 140, 0.08) 0px, rgba(220, 190, 140, 0.08) 2px, transparent 2px, transparent 8px);
+            padding: 2rem 2rem 1.8rem;
+            text-align: center;
+            border-bottom: 4px solid #c6a43b;
+        }
+
+        .hero h1 {
+            font-family: 'Times New Roman', 'Georgia', serif;
+            font-size: 3.2rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+            color: #f8eedb;
+            text-shadow: 2px 2px 0 #1f1b16;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero .sub {
+            font-size: 1.15rem;
+            color: #e6d5b3;
+            font-style: italic;
+            border-top: 1px solid rgba(200, 170, 100, 0.5);
+            display: inline-block;
+            padding-top: 0.5rem;
+        }
+
+        .content {
+            padding: 2rem 2rem 2.5rem;
+        }
+
+        /* 卡片通用样式 */
+        .card {
+            background: #fffef7;
+            border-radius: 1.5rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 2rem;
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            border: 1px solid #ece3d0;
+        }
+
+        .card:hover {
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 1.9rem;
+            font-weight: 600;
+            font-family: 'Times New Roman', 'Georgia', serif;
+            border-left: 7px solid #c6a43b;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+            color: #2f2a24;
+        }
+
+        .section-title i {
+            font-weight: 400;
+            font-size: 1.2rem;
+            color: #8b765c;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 780px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .content {
+                padding: 1.2rem;
+            }
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+        }
+
+        .principle-box {
+            background: #f6f2e7;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            font-family: monospace;
+            font-size: 1rem;
+            border-left: 4px solid #b28b5e;
+            margin: 1rem 0;
+        }
+
+        .formula {
+            font-family: 'Courier New', 'SF Mono', monospace;
+            background: #e7e1d2;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #3c2a1f;
+        }
+
+        .step-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .step-list li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.8rem;
+            position: relative;
+        }
+        .step-list li::before {
+            content: "✧";
+            color: #c6a43b;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .simulator {
+            background: #fff3e0;
+            border-radius: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid #eddabc;
+        }
+        .sim-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 0.6rem 0;
+            accent-color: #b5802e;
+        }
+        .number-input {
+            background: #fef4e6;
+            border: 1px solid #d4bc8c;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            width: 100px;
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .result-badge {
+            background: #2e2b26;
+            color: #f3e1b3;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .flex-between {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .scale-art {
+            background: #f8f0e2;
+            border-radius: 1.2rem;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px #0001, 0 2px 2px #fff8;
+        }
+        .ruler-d {
+            background: #e5d7c2;
+            height: 40px;
+            border-radius: 30px;
+            position: relative;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            border: 1px solid #cdb48a;
+        }
+        .ruler-mark {
+            flex: 1;
+            height: 25px;
+            border-right: 1px solid #8b6946;
+            position: relative;
+            font-size: 10px;
+            text-align: center;
+            line-height: 38px;
+            color: #4d3516;
+        }
+        .ruler-mark span {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        footer {
+            background: #e3daca;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.85rem;
+            color: #5c4b30;
+            border-top: 1px solid #dacaa8;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        @media (max-width: 500px) {
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>⚙️ 计算尺 · SLIDE RULE</h1>
+        <div class="sub">「 没有电源的模拟计算机 | 对数尺上的乘法艺术 」</div>
+    </div>
+    <div class="content">
+        <!-- 简介与历史 -->
+        <div class="card">
+            <div class="section-title">📜 传奇工具 · 历史回响</div>
+            <p>计算尺（Slide Rule）诞生于17世纪，依靠<strong>对数原理</strong>将乘除运算转化为简单的长度加法。直至20世纪70年代，它一直是工程师、科学家、航海家的必备“掌上计算机”。阿波罗登月计划中，无数关键数据曾依赖计算尺校核。即便在数字时代的今天，它仍被视作精密机械与数学智慧的结晶。</p>
+            <br>
+            <p>1622年，英国数学家威廉·奥特雷德（William Oughtred）将两条对数刻度并排滑动，制造出第一把圆形计算尺；之后逐步演化为经典的矩形“曼海姆尺”。其优雅、可靠、直觉化的操作，在微电子计算机普及前统治了科学工程领域三百年。</p>
+        </div>
+
+        <!-- 原理 & 结构 两栏布局 -->
+        <div class="grid-2col">
+            <!-- 原理 -->
+            <div class="card">
+                <div class="section-title">🧠 核心原理 · 对数魔法</div>
+                <p>计算尺的灵魂是<strong>对数刻度</strong>。在普通直尺上，数字按等间距排列；而在计算尺上，数字的位置与其<strong>常用对数 (lg)</strong> 成正比：</p>
+                <div class="principle-box">
+                    📐 点 \(x\) 距离尺左端的长度 \(L(x) = k \cdot \log_{10}(x)\)
+                </div>
+                <p>对数恒等式 \(\log(a) + \log(b) = \log(a \times b)\) 意味着：<br>
+                将两个数的长度<strong>首尾相接</strong>，总长度对应乘积的对数，从而直接读出乘积。<br>
+                同理，减法对应除法。</p>
+                <div class="scale-art">
+                    <div style="font-weight:500; margin-bottom:6px;">📏 对数刻度示意（不均匀分布）</div>
+                    <div class="ruler-d">
+                        <div class="ruler-mark" style="flex:0.5;"><span>1</span></div>
+                        <div class="ruler-mark" style="flex:0.7;"><span>2</span></div>
+                        <div class="ruler-mark" style="flex:0.85;"><span>3</span></div>
+                        <div class="ruler-mark" style="flex:1.0;"><span>4</span></div>
+                        <div class="ruler-mark" style="flex:1.1;"><span>5</span></div>
+                        <div class="ruler-mark" style="flex:1.2;"><span>6</span></div>
+                        <div class="ruler-mark" style="flex:1.28;"><span>7</span></div>
+                        <div class="ruler-mark" style="flex:1.36;"><span>8</span></div>
+                        <div class="ruler-mark" style="flex:1.43;"><span>9</span></div>
+                        <div class="ruler-mark" style="flex:1.5;"><span>10</span></div>
+                    </div>
+                    <div style="font-size:0.8rem; color:#6a4e2a;">↑ 对数刻度左密右疏，1~10的物理距离按lg增长。</div>
+                </div>
+                <p>标准计算尺通常包含：<strong>D尺</strong>（固定尺，主刻度）、<strong>C尺</strong>（滑尺，与D尺对数一致）、<strong>A/B尺</strong>（平方/平方根）、<strong>CI尺</strong>（倒数）、<strong>游标</strong>（辅助对齐）。乘除主要使用C、D两尺完成。</p>
+            </div>
+
+            <!-- 结构 & 组成 -->
+            <div class="card">
+                <div class="section-title">🔧 结构解剖</div>
+                <ul class="step-list">
+                    <li><strong>尺身 (Stator)</strong> —— 固定部分，通常刻有D、K、L等刻度。</li>
+                    <li><strong>滑尺 (Slide)</strong> —— 嵌入中间可抽动的尺，刻有C、CI、B等刻度。</li>
+                    <li><strong>游标 (Cursor)</strong> —— 透明带基准线的玻璃窗，用于精准对齐读数。</li>
+                    <li><strong>主要刻度</strong> —— C / D 尺（核心乘除），A/B（平方/平方根），L（常用对数值），CI（倒数尺）。</li>
+                </ul>
+                <div style="margin: 1.2rem 0 0 0; background:#f2ebdd; border-radius: 28px; padding: 0.8rem; text-align:center; font-style:italic;">
+                    ⚡ “滑尺的毫米级移动，就能完成一次乘法”—— 模拟计算的极致浪漫
+                </div>
+            </div>
+        </div>
+
+        <!-- 如何使用：乘除经典步骤 -->
+        <div class="card">
+            <div class="section-title">📖 如何使用 · 经典乘除法 (C/D尺)</div>
+            <div class="grid-2col" style="gap: 1.8rem;">
+                <div>
+                    <h3 style="display:flex; gap:8px; margin-bottom: 12px;">✖️ 乘法运算</h3>
+                    <p>计算 <strong>2 × 3 = 6</strong> 示范：</p>
+                    <ul class="step-list">
+                        <li>1️⃣ 移动滑尺，将 <strong>C尺的“1”</strong> 对准 <strong>D尺上的“2”</strong>（第一个因数）。</li>
+                        <li>2️⃣ 找到 <strong>C尺上的“3”</strong>（第二个因数）。</li>
+                        <li>3️⃣ 游标线对齐C尺的“3”，此时游标指向D尺的数值即<strong>6</strong>（乘积）。</li>
+                    </ul>
+                    <p>📌 若乘积超出量程，则使用CI倒数量或移动1(右端)以扩展计算。</p>
+                </div>
+                <div>
+                    <h3 style="display:flex; gap:8px; margin-bottom: 12px;">➗ 除法运算</h3>
+                    <p>计算 <strong>6 ÷ 2 = 3</strong> 示范：</p>
+                    <ul class="step-list">
+                        <li>1️⃣ 将 <strong>C尺上的“2”</strong> (除数) 对准 <strong>D尺上的“6”</strong> (被除数)。</li>
+                        <li>2️⃣ 读取 <strong>C尺的“1”</strong> 所对应的 D尺数值 → 3 即为商。</li>
+                    </ul>
+                    <p>📐 原理：\( \log(6) - \log(2) = \log(3) \)，长度相减即得商。</p>
+                </div>
+            </div>
+            <div class="principle-box" style="margin-top: 1rem;">
+                💡 高阶技巧：利用CI（倒数尺）进行连续乘法运算，利用A/B尺快速计算平方/平方根，利用L尺求任意数的对数。一把计算尺在手，乘、除、幂、根、三角函数皆可解。
+            </div>
+        </div>
+
+        <!-- 交互演示区块：对数加法模拟器 & 对数减法模拟器 帮助直观理解原理 -->
+        <div class="card">
+            <div class="section-title">✨ 交互实验室 · 体验对数加法（乘法）与减法（除法）</div>
+            <p style="margin-bottom: 1rem;">计算尺将乘除转变为刻度长度相加减。下方模拟器通过“对数加法/减法”完美再现核心思想——移动滑块即时看到乘积与商的变化。</p>
+            <div class="grid-2col" style="gap: 2rem;">
+                <!-- 乘法模拟器：对数加法 -->
+                <div class="simulator">
+                    <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.2rem;">✖️ 乘法模拟 · 长度相加</div>
+                    <div style="font-size: 0.85rem; margin-bottom: 1rem;">log(A) + log(B) = log(A × B)</div>
+                    <div class="sim-label">
+                        <span>因子 A &nbsp; <span id="multA_val">2.0</span></span>
+                        <input type="range" id="mult_a" min="1" max="10" step="0.05" value="2.0">
+                    </div>
+                    <div class="sim-label">
+                        <span>因子 B &nbsp; <span id="multB_val">3.0</span></span>
+                        <input type="range" id="mult_b" min="1" max="10" step="0.05" value="3.0">
+                    </div>
+                    <div class="result-badge" id="mult_result">
+                        🧮 乘积 = 6.00
+                    </div>
+                    <div id="mult_log_detail" style="font-size:0.8rem; margin-top: 12px; text-align:center; font-family: monospace; background: #efe3cf; padding: 6px; border-radius: 20px;">
+                        log₁₀(2.00) + log₁₀(3.00) = log₁₀(6.00) → 6.00
+                    </div>
+                    <div style="font-size:0.7rem; margin-top: 0.7rem; color:#6a4e2a;">⚡ 这正是计算尺C/D尺的加法原理，滑动长度相加得出积。</div>
+                </div>
+
+                <!-- 除法模拟器：对数减法 -->
+                <div class="simulator">
+                    <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.2rem;">➗ 除法模拟 · 长度相减</div>
+                    <div style="font-size: 0.85rem; margin-bottom: 1rem;">log(M) - log(N) = log(M ÷ N)</div>
+                    <div class="sim-label">
+                        <span>被除数 M &nbsp; <span id="divM_val">6.0</span></span>
+                        <input type="range" id="div_m" min="1" max="10" step="0.05" value="6.0">
+                    </div>
+                    <div class="sim-label">
+                        <span>除数 N &nbsp; <span id="divN_val">2.0</span></span>
+                        <input type="range" id="div_n" min="1.05" max="10" step="0.05" value="2.0">
+                    </div>
+                    <div class="result-badge" id="div_result">
+                        🧮 商 = 3.00
+                    </div>
+                    <div id="div_log_detail" style="font-size:0.8rem; margin-top: 12px; text-align:center; font-family: monospace; background: #efe3cf; padding: 6px; border-radius: 20px;">
+                        log₁₀(6.00) - log₁₀(2.00) = log₁₀(3.00) → 3.00
+                    </div>
+                    <div style="font-size:0.7rem; margin-top: 0.7rem; color:#6a4e2a;">📐 对应对数长度相减，直接在D尺读得商。</div>
+                </div>
+            </div>
+            <!-- 附加尺规：简单可视化游标示意 -->
+            <div style="margin-top: 1.6rem; background: #e8ddcd; border-radius: 1.2rem; padding: 0.8rem; text-align: center;">
+                <span style="font-weight: bold;">🎯 游标对齐演示 (概念) : </span>
+                <span id="alignment_demo" style="font-family: monospace; background:#fff0df; padding: 4px 10px; border-radius: 36px;">C尺[1] ──→ D尺[2] , C尺[3] → D尺[6]</span>
+            </div>
+        </div>
+
+        <!-- 进阶用法 与 小趣闻 -->
+        <div class="card">
+            <div class="section-title">🔭 计算尺的更多本领 & 冷知识</div>
+            <div class="grid-2col">
+                <div>
+                    <h3>📌 平方与平方根</h3>
+                    <p>A尺（或B尺）是D尺的平方刻度（双周期对数）。要计算 \(3^2 = 9\) ，将游标对准D尺3，在A尺上读得9。平方根则逆用。</p>
+                    <h3 style="margin-top: 12px;">🔄 连续乘除 & 比例</h3>
+                    <p>利用CI(倒置C尺)与C尺配合，无需重新调零，进行\(a×b×c\)多步乘法，工程师常用的快速技巧。</p>
+                </div>
+                <div>
+                    <h3>🎓 历史花絮</h3>
+                    <ul class="step-list">
+                        <li>计算尺从未被完全“淘汰”，至今仍被帆船运动员、航空背测学员使用。</li>
+                        <li>经典品牌：Keuffel & Esser (K&E)、Pickett（曾用于阿波罗计划）、Faber-Castell。</li>
+                        <li>一把高级计算尺可以完成三角函数、指数、对数甚至双曲函数计算。</li>
+                    </ul>
+                    <div style="margin-top: 1rem; background: #cbbf9e30; border-radius: 1rem; padding: 0.7rem;">
+                        🚀 阿波罗13号任务中，宇航员依靠计算尺精确校正航道，被誉为“救命尺”。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="background: #faf3e5; text-align: center;">
+            <p style="font-size: 3rem;">尝试做同款！</p>
+            <img src="diy.jpg" alt="some_text">
+        </div>
+    </div>
+    <footer>
+        Copyright © 2026 孙 
+    </footer>
+</div>
+
+<script>
+    // 乘法模拟器 (对数加法)
+    const multASlider = document.getElementById('mult_a');
+    const multBSlider = document.getElementById('mult_b');
+    const multAvalSpan = document.getElementById('multA_val');
+    const multBvalSpan = document.getElementById('multB_val');
+    const multResultDiv = document.getElementById('mult_result');
+    const multLogDetail = document.getElementById('mult_log_detail');
+
+    // 除法模拟器
+    const divMSlider = document.getElementById('div_m');
+    const divNSlider = document.getElementById('div_n');
+    const divMvalSpan = document.getElementById('divM_val');
+    const divNvalSpan = document.getElementById('divN_val');
+    const divResultDiv = document.getElementById('div_result');
+    const divLogDetail = document.getElementById('div_log_detail');
+
+    // 辅助对齐演示文字更新
+    const alignmentSpan = document.getElementById('alignment_demo');
+
+    function updateMultiplication() {
+        let a = parseFloat(multASlider.value);
+        let b = parseFloat(multBSlider.value);
+        // 避免精度负零
+        a = parseFloat(a.toFixed(4));
+        b = parseFloat(b.toFixed(4));
+        multAvalSpan.innerText = a.toFixed(2);
+        multBvalSpan.innerText = b.toFixed(2);
+        
+        let product = a * b;
+        let roundedProduct = product.toFixed(4);
+        let displayProduct = parseFloat(roundedProduct).toFixed(2);
+        if (displayProduct > 99.99) displayProduct = product.toExponential(2);
+        else displayProduct = product.toFixed(4).replace(/\.?0+$/, ''); // 去尾零
+        
+        let logA = Math.log10(a);
+        let logB = Math.log10(b);
+        let logSum = logA + logB;
+        let computedProduct = Math.pow(10, logSum);
+        
+        multResultDiv.innerHTML = `🧮 乘积 = ${parseFloat(computedProduct).toFixed(6).replace(/\.?0+$/, '')}`;
+        multLogDetail.innerHTML = `log₁₀(${a.toFixed(3)}) + log₁₀(${b.toFixed(3)}) = ${logSum.toFixed(5)}<br> ⇒ 10^(${logSum.toFixed(5)}) = ${computedProduct.toFixed(6)} &nbsp; ➕ ➡  ${a} × ${b} = ${(a*b).toFixed(6)}`;
+        
+        // 更新对齐示意文字
+        updateAlignmentText(a, b, a*b);
+    }
+
+    function updateDivision() {
+        let m = parseFloat(divMSlider.value);
+        let n = parseFloat(divNSlider.value);
+        if (n === 0) n = 0.01;
+        m = parseFloat(m.toFixed(4));
+        n = parseFloat(n.toFixed(4));
+        divMvalSpan.innerText = m.toFixed(2);
+        divNvalSpan.innerText = n.toFixed(2);
+        
+        let quotient = m / n;
+        let logM = Math.log10(m);
+        let logN = Math.log10(n);
+        let logDiff = logM - logN;
+        let computedQuotient = Math.pow(10, logDiff);
+        
+        divResultDiv.innerHTML = `🧮 商 = ${parseFloat(computedQuotient).toFixed(6).replace(/\.?0+$/, '')}`;
+        divLogDetail.innerHTML = `log₁₀(${m.toFixed(3)}) - log₁₀(${n.toFixed(3)}) = ${logDiff.toFixed(5)}<br> ⇒ 10^(${logDiff.toFixed(5)}) = ${computedQuotient.toFixed(6)} &nbsp; ➗ ➡  ${m} ÷ ${n} = ${(m/n).toFixed(6)}`;
+    }
+
+    function updateAlignmentText(a, b, prod) {
+        // 形象描述 C尺和D尺的对准关系，类似乘法演示
+        if (!isNaN(a) && !isNaN(b) && isFinite(prod)) {
+            let displayProd = prod.toFixed(3);
+            alignmentSpan.innerHTML = `📏 乘法视效: C尺[1] 对准 D尺[${a.toFixed(2)}] , C尺[${b.toFixed(2)}] 下方 D尺读数 ➜ ${displayProd}`;
+        } else {
+            alignmentSpan.innerHTML = `C尺[1] ──→ D尺[2] , C尺[3] → D尺[6] (经典范例)`;
+        }
+    }
+
+    // 监听变化
+    function initSimulators() {
+        // 乘法监听
+        multASlider.addEventListener('input', () => {
+            updateMultiplication();
+        });
+        multBSlider.addEventListener('input', () => {
+            updateMultiplication();
+        });
+        // 除法监听
+        divMSlider.addEventListener('input', () => {
+            updateDivision();
+        });
+        divNSlider.addEventListener('input', () => {
+            updateDivision();
+        });
+        
+        // 初始调用
+        updateMultiplication();
+        updateDivision();
+    }
+    
+    initSimulators();
+
+    // 附加一个对滑块数值的友好显示与动态修改文本联动
+    const allSliders = [multASlider, multBSlider, divMSlider, divNSlider];
+    allSliders.forEach(slider => {
+        slider.addEventListener('input', function(e) {
+            let val = parseFloat(e.target.value);
+            let parent = e.target.parentElement;
+            let spanTarget = parent.querySelector('span[id]');
+            if (spanTarget && spanTarget.id.includes('val')) {
+                spanTarget.innerText = val.toFixed(2);
+            }
+        });
+    });
+    
+    // 增加页面额外微效果：让尺子示意更有活力
+    function fancyScaleAlert() {
+        // 只是为了视觉效果，没特殊功能。
+        const rulerDemo = document.querySelector('.scale-art');
+        if(rulerDemo) {
+            rulerDemo.style.transition = "0.2s";
+        }
+    }
+    fancyScaleAlert();
+</script>
+</body>
+</html>
